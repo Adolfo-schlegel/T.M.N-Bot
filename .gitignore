@@ -1,0 +1,9 @@
+# Ignorar datos pesados y bases de datos
+n8n-data/
+ollama_data/
+
+# Ignorar logs de Docker
+*.log
+
+# IMPORTANTE: Ignorar tu archivo con la clave de cifrado si usas un .env
+.env

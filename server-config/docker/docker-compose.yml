@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # --- SERVICIO OLLAMA (IA) ---
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - ai-network
+
+  # --- AUTOMATIZACIÓN DE PULL DE MODELO ---
+  ollama-pull-llama:
+    image: curlimages/curl:latest
+    container_name: ollama-pull-llama
+    volumes:
+      - ./pull-llama.sh:/pull-llama.sh
+    entrypoint: ["/bin/sh", "/pull-llama.sh"]
+    depends_on:
+      - ollama
+    networks:
+      - ai-network
+
+  # --- SERVICIO N8N ---
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - GENERIC_TIMEZONE=America/Argentina/Buenos_Aires
+      - TZ=America/Argentina/Buenos_Aires
+      - N8N_COMMUNITY_PACKAGES_ENABLED=true
+      - N8N_ENCRYPTION_KEY='z7!ABObAiQQ766RzuHr4rn1PLBQ^Na'
+    volumes:
+      - ./n8n-data:/home/node/.n8n
+    networks:
+      - ai-network
+
+networks:
+  ai-network:
+    driver: bridge
+
+volumes:
+  ollama_data:
